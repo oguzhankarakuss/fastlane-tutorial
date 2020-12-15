@@ -1,0 +1,91 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+#Globals
+prefix_dir = "./"
+project_name = "fastlane-tutorial"
+project_target = "fastlane-tutorial"
+project_scheme = "#{project_target}"  
+project_env = "Test"
+xcodeproj = "#{prefix_dir}#{project_name}.xcodeproj"
+workspace = "#{prefix_dir}#{project_name}.xcworkspace"
+allow_provisioning_updates = "-allowProvisioningUpdates"
+
+platform :ios do
+  desc "Add Badge"
+  lane :add_badge_to_app_icon do 
+
+    project_version = get_version_number(
+      xcodeproj: xcodeproj,
+      target: project_target  
+    )
+    project_build_number = get_build_number(
+      xcodeproj: xcodeproj
+    )
+
+    add_badge(shield: "v#{project_version}-#{project_build_number}-blue", no_badge: false)
+
+  end
+
+  lane :commit_beta_version do
+    project_version = get_version_number(
+      xcodeproj: xcodeproj,
+      target: project_target  
+    )
+    project_build_number = get_build_number(
+      xcodeproj: xcodeproj
+    )
+
+    sh "git commit -am 'TestFlight v#{project_version}(#{project_build_number})'"
+    sh "git push"
+  end
+
+  desc "Notify"
+  lane :notify_in_slack do 
+
+    project_version = get_version_number(
+      xcodeproj: xcodeproj,
+      target: project_target  
+    )
+    project_build_number = get_build_number(
+      xcodeproj: xcodeproj
+    )
+
+    slack(
+      message: "App successfully released! \n --- Environment: #{project_env} \n --- Version: #{project_version}(#{project_build_number})",
+      slack_url: "https://hooks.slack.com/services/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",
+      success: true,
+      payload: {  # Optional, lets you specify any number of your own Slack attachments.
+        "Build Date" => Time.new.to_s,
+        "Built by" => "Local machine",
+      }
+    )
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :test_flight_beta do
+    increment_build_number
+    add_badge_to_app_icon
+    build_app(scheme: project_scheme,
+              workspace: workspace,
+              include_bitcode: false,
+              export_xcargs: allow_provisioning_updates)
+  upload_to_testflight
+    notify_in_slack
+    commit_beta_version
+  end
+end

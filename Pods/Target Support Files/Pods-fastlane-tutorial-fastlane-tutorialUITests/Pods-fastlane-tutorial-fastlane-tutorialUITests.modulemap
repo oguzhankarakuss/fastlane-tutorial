@@ -1,0 +1,6 @@
+framework module Pods_fastlane_tutorial_fastlane_tutorialUITests {
+  umbrella header "Pods-fastlane-tutorial-fastlane-tutorialUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}
