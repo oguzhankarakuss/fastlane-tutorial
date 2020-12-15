@@ -67,7 +67,7 @@ platform :ios do
 
     slack(
       message: "App successfully released! \n --- Environment: #{project_env} \n --- Version: #{project_version}(#{project_build_number})",
-      slack_url: "https://hooks.slack.com/services/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",
+      slack_url: "https://hooks.slack.com/services/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",
       success: true,
       payload: {  # Optional, lets you specify any number of your own Slack attachments.
         "Build Date" => Time.new.to_s,
